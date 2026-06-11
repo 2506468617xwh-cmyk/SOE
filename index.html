@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>经济学院 2022届毕业纪念</title>
+<style>
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:    #C8151B;
+  --red-dk: #A01115;
+  --white:  #FFFFFF;
+  --bg:     #F7F7F7;
+  --text:   #333333;
+  --muted:  #888888;
+  --shadow: 0 2px 8px rgba(0,0,0,.08);
+  --shadow-hover: 0 8px 24px rgba(0,0,0,.15);
+  --radius: 12px;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue",
+               Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   COVER PAGE
+   ============================================================ */
+.cover-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- cover header bar --- */
+.cover-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cover-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(200,21,27,.06);
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.cover-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cover-header-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: .3px;
+}
+
+.cover-header-sub {
+  font-size: .68rem;
+  color: var(--muted);
+}
+
+/* --- group photo marquee --- */
+.cover-photos {
+  overflow: hidden;
+  width: 100%;
+  height: 45vh;
+  position: relative;
+}
+
+.cover-photos-track {
+  display: flex;
+  gap: 4px;
+  height: 100%;
+  animation: marquee linear infinite;
+  animation-duration: 30s;
+}
+
+.cover-photos-track.paused {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.cover-photo-item {
+  flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #e8e8e8;
+}
+
+.cover-photo-item img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+/* --- cover info section --- */
+.cover-info {
+  text-align: center;
+  padding: 28px 20px 12px;
+  background: var(--white);
+}
+
+.cover-dept {
+  font-size: .85rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.cover-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: 2px;
+  line-height: 1.3;
+}
+
+.cover-desc {
+  font-size: .82rem;
+  color: #999;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+/* --- enter button --- */
+.cover-action {
+  text-align: center;
+  padding: 10px 20px 32px;
+  background: var(--white);
+}
+
+.btn-enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 48px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--white);
+  background: var(--red);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 16px rgba(200,21,27,.35);
+  transition: transform .2s, box-shadow .2s, background .2s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.btn-enter:active {
+  transform: scale(.96);
+}
+
+.btn-enter:hover {
+  background: var(--red-dk);
+  box-shadow: 0 6px 24px rgba(200,21,27,.45);
+}
+
+.btn-enter-arrow {
+  font-size: 1.2rem;
+  transition: transform .2s;
+}
+
+.btn-enter:hover .btn-enter-arrow {
+  transform: translateX(4px);
+}
+
+/* --- cover wave/decoration --- */
+.cover-ribbon {
+  height: 4px;
+  background: var(--red);
+  opacity: .15;
+}
+
+/* ============================================================
+   BOOK PAGE (hidden initially)
+   ============================================================ */
+.book-page {
+  display: none;
+}
+
+body.in-book .cover-page {
+  display: none;
+}
+
+body.in-book .book-page {
+  display: block;
+}
+
+/* ---- back-to-cover button ---- */
+.book-top-bar {
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(200,21,27,.3);
+}
+
+.btn-back {
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  color: var(--white);
+  font-size: .78rem;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-back:hover {
+  background: rgba(255,255,255,.25);
+}
+
+.book-top-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(255,255,255,.12);
+  padding: 3px;
+}
+
+.book-top-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   BOOK: Hero
+   ============================================================ */
+.hero {
+  background: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(200,21,27,.3);
+}
+
+.hero-logo {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(255,255,255,.15);
+  padding: 4px;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hero-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.hero-subtitle {
+  font-size: .75rem;
+  color: rgba(255,255,255,.85);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   BOOK: Search
+   ============================================================ */
+.search-container {
+  padding: 12px 16px;
+  position: sticky;
+  top: 48px;
+  z-index: 99;
+  background: var(--bg);
+}
+
+.search-wrapper {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  color: #aaa;
+}
+
+.search-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 2px solid transparent;
+  border-radius: 24px;
+  font-size: .95rem;
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+  box-shadow: var(--shadow);
+  transition: border-color .2s, box-shadow .2s;
+  font-family: inherit;
+}
+
+.search-input::placeholder { color: #bbb; }
+
+.search-input:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(200,21,27,.12), var(--shadow);
+}
+
+.search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #bbb;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  display: none;
+  border-radius: 50%;
+  transition: color .2s, background .2s;
+}
+
+.search-clear.visible { display: block; }
+.search-clear:hover { color: #666; background: #eee; }
+
+.stats-bar {
+  text-align: center;
+  padding: 0 16px 8px;
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.no-results {
+  display: none;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.no-results.visible { display: block; }
+
+.no-results-icon {
+  margin-bottom: 12px;
+  opacity: .4;
+}
+
+.no-results-text {
+  font-size: 1rem;
+  color: #999;
+}
+
+/* ============================================================
+   BOOK: Card Grid
+   ============================================================ */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0 12px 24px;
+}
+
+@media (max-width: 400px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 8px 20px; }
+}
+
+@media (min-width: 640px) {
+  .card-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 0 20px 32px; max-width: 800px; margin: 0 auto; }
+}
+
+@media (min-width: 900px) {
+  .card-grid { grid-template-columns: repeat(5, 1fr); gap: 16px; max-width: 1000px; }
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform .25s ease, box-shadow .25s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  animation: cardFadeIn .4s ease both;
+}
+
+.card:active { transform: scale(.97); }
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-photo {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  display: block;
+  background: #e8e8e8;
+}
+
+.card-placeholder {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background: linear-gradient(135deg, #e0e0e0, #d0d0d0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #bbb;
+  font-weight: 700;
+}
+
+.card-name {
+  text-align: center;
+  padding: 8px 4px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--red);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   BOOK: Modal
+   ============================================================ */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 200;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn .25s ease;
+}
+
+.modal-overlay.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-card {
+  background: var(--white);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 28px 24px 24px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.25);
+  animation: modalSlideUp .3s ease;
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(30px) scale(.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px; right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--red);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-close:hover { background: rgba(200,21,27,.08); }
+
+.modal-photo-wrapper { text-align: center; margin-bottom: 16px; }
+
+.modal-photo {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--red);
+  box-shadow: 0 4px 16px rgba(200,21,27,.2);
+}
+
+.modal-placeholder {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  border: 3px solid #ddd;
+  background: linear-gradient(135deg, #e8e8e8, #d8d8d8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  color: #bbb;
+  font-weight: 700;
+}
+
+.modal-name {
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 4px;
+}
+
+.modal-id {
+  text-align: center;
+  font-size: .78rem;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.modal-major {
+  text-align: center;
+  font-size: .8rem;
+  color: #C8151B;
+  font-weight: 600;
+  letter-spacing: .5px;
+  margin-top: 2px;
+  margin-bottom: 12px;
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 14px 0;
+}
+
+.modal-message {
+  font-size: .95rem;
+  line-height: 1.8;
+  color: #444;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: justify;
+}
+
+.modal-message-empty {
+  text-align: center;
+  color: #bbb;
+  font-style: italic;
+  padding: 20px 0;
+}
+
+/* ============================================================
+   Mobile: Bottom Sheet Modal
+   ============================================================ */
+@media (max-width: 500px) {
+  .modal-overlay { align-items: flex-end; }
+
+  .modal-card {
+    width: 100%; max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 32px;
+    max-height: 80vh;
+    animation: bottomSheetUp .35s cubic-bezier(.16,1,.3,1);
+  }
+
+  @keyframes bottomSheetUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .modal-close { top: 12px; right: 16px; font-size: 1.3rem; }
+  .modal-photo, .modal-placeholder { width: 96px; height: 96px; }
+  .modal-name { font-size: 1.15rem; }
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.footer {
+  text-align: center;
+  padding: 16px 16px 32px;
+  font-size: .75rem;
+  color: #ccc;
+}
+
+.footer-heart { color: var(--red); }
+
+/* ============================================================
+   Cover page transition
+   ============================================================ */
+@keyframes coverOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-20px); }
+}
+
+@keyframes bookIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     COVER PAGE
+     ============================================================ -->
+<div class="cover-page" id="coverPage">
+
+  <!-- header bar -->
+  <div class="cover-header">
+    <img class="cover-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+    <div class="cover-header-text">
+      <div class="cover-header-title">复旦大学经济学院</div>
+      <div class="cover-header-sub">School of Economics · Fudan University</div>
+    </div>
+  </div>
+
+  <!-- group photo collage: 2x2 grid -->
+  <div class="cover-photos" id="coverPhotos">
+    <div class="cover-photos-track" id="coverTrack"></div>
+  </div>
+
+  <!-- info section -->
+  <div class="cover-ribbon"></div>
+  <div class="cover-info">
+    <div class="cover-dept">国际经济与贸易 · 财政学</div>
+    <div class="cover-title">2022届 毕业纪念册</div>
+    <div class="cover-desc">博学而笃志 · 切问而近思</div>
+  </div>
+
+  <!-- enter button -->
+  <div class="cover-action">
+    <button class="btn-enter" id="btnEnter">
+      进入纪念册 <span class="btn-enter-arrow">→</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     BOOK PAGE
+     ============================================================ -->
+<div class="book-page" id="bookPage">
+
+  <!-- slim top bar with back button -->
+  <div class="book-top-bar">
+    <button class="btn-back" id="btnBack">← 返回封面</button>
+    <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+    <div class="book-top-title">经济学院 2022届毕业纪念</div>
+  </div>
+
+  <!-- hero banner (compact, without logo to save space) -->
+  <div class="hero">
+    <img class="hero-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+    <div class="hero-text">
+      <div class="hero-title">经济学院 2022届毕业纪念</div>
+      <div class="hero-subtitle">国际经济与贸易 · 财政学 双学位</div>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="search-container">
+    <div class="search-wrapper">
+      <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input class="search-input" type="text" id="searchInput" placeholder="搜索同学姓名..." autocomplete="off">
+      <button class="search-clear" id="searchClear" title="清除">✕</button>
+    </div>
+  </div>
+
+  <!-- stats -->
+  <div class="stats-bar" id="statsBar"></div>
+
+  <!-- no results -->
+  <div class="no-results" id="noResults">
+    <div class="no-results-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px;opacity:0.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+    <div class="no-results-text">未找到该同学</div>
+  </div>
+
+  <!-- card grid -->
+  <div class="card-grid" id="cardGrid"></div>
+
+  <!-- footer -->
+  <div class="footer">
+    复旦大学经济学院 <span class="footer-heart">♥</span> 2022届
+  </div>
+
+</div>
+
+<!-- ============================================================
+     Modal (shared)
+     ============================================================ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" id="modalCard">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-photo-wrapper" id="modalPhotoWrapper"></div>
+    <div class="modal-name" id="modalName"></div>
+    <div class="modal-id" id="modalId"></div>
+    <div class="modal-major" id="modalMajor"></div>
+    <hr class="modal-divider">
+    <div class="modal-message" id="modalMessage"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     Data
+     ============================================================ -->
+<script src="group_photos.js"></script>
+<script src="data.js"></script>
+
+<!-- ============================================================
+     App Logic
+     ============================================================ -->
+<script>
+(function() {
+  'use strict';
+
+  // ---- Data ----
+  var allStudents = (typeof STUDENTS !== 'undefined') ? STUDENTS : [];
+  var filteredStudents = allStudents.slice();
+  var groupPhotos = (typeof GROUP_PHOTOS !== 'undefined') ? GROUP_PHOTOS : [];
+
+  // ---- DOM: Cover ----
+  var coverPage   = document.getElementById('coverPage');
+  var coverTrack  = document.getElementById('coverTrack');
+  var btnEnter    = document.getElementById('btnEnter');
+
+  // ---- DOM: Book ----
+  var bookPage    = document.getElementById('bookPage');
+  var btnBack     = document.getElementById('btnBack');
+  var searchInput = document.getElementById('searchInput');
+  var searchClear = document.getElementById('searchClear');
+  var cardGrid    = document.getElementById('cardGrid');
+  var noResults   = document.getElementById('noResults');
+  var statsBar    = document.getElementById('statsBar');
+
+  // ---- DOM: Modal ----
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalCard    = document.getElementById('modalCard');
+  var modalClose   = document.getElementById('modalClose');
+  var modalPhoto   = document.getElementById('modalPhotoWrapper');
+  var modalName    = document.getElementById('modalName');
+  var modalId      = document.getElementById('modalId');
+  var modalMessage = document.getElementById('modalMessage');
+
+  // ============================================================
+  //  Cover: Render marquee group photos
+  // ============================================================
+  function renderCoverPhotos() {
+    coverTrack.innerHTML = '';
+    if (groupPhotos.length === 0) return;
+
+    // Build photo items (original set)
+    function createItems() {
+      var frag = document.createDocumentFragment();
+      groupPhotos.forEach(function(src, i) {
+        var div = document.createElement('div');
+        div.className = 'cover-photo-item';
+        var img = document.createElement('img');
+        img.src = src;
+        img.alt = '班级合照 ' + (i + 1);
+        img.loading = 'lazy';
+        img.draggable = false;
+        img.onerror = function() { this.style.display = 'none'; };
+        div.appendChild(img);
+        frag.appendChild(div);
+      });
+      return frag;
+    }
+
+    // Append twice for seamless infinite loop
+    coverTrack.appendChild(createItems());
+    coverTrack.appendChild(createItems());
+
+    // Pause on hover / touch
+    coverTrack.parentElement.addEventListener('mouseenter', function() {
+      coverTrack.classList.add('paused');
+    });
+    coverTrack.parentElement.addEventListener('mouseleave', function() {
+      coverTrack.classList.remove('paused');
+    });
+    coverTrack.parentElement.addEventListener('touchstart', function() {
+      coverTrack.classList.add('paused');
+    }, { passive: true });
+    coverTrack.parentElement.addEventListener('touchend', function() {
+      coverTrack.classList.remove('paused');
+    });
+  }
+
+  // ============================================================
+  //  Book: Render cards
+  // ============================================================
+  function renderCards(students) {
+    cardGrid.innerHTML = '';
+
+    if (students.length === 0) {
+      noResults.classList.add('visible');
+      cardGrid.style.display = 'none';
+      updateStats(0);
+      return;
+    }
+
+    noResults.classList.remove('visible');
+    cardGrid.style.display = '';
+
+    students.forEach(function(student, index) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.style.animationDelay = (index * .03) + 's';
+      card.setAttribute('data-id', student.id);
+
+      if (student.photo) {
+        var img = document.createElement('img');
+        img.className = 'card-photo';
+        img.src = student.photo;
+        img.alt = student.name;
+        img.loading = 'lazy';
+        img.onerror = function() {
+          img.replaceWith(createPlaceholder(student.name));
+        };
+        card.appendChild(img);
+      } else {
+        card.appendChild(createPlaceholder(student.name));
+      }
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'card-name';
+      nameEl.textContent = student.name;
+      card.appendChild(nameEl);
+
+      card.addEventListener('click', function() { openModal(student); });
+      cardGrid.appendChild(card);
+    });
+
+    updateStats(students.length);
+  }
+
+  function createPlaceholder(name) {
+    var div = document.createElement('div');
+    div.className = 'card-placeholder';
+    div.textContent = name.charAt(0);
+    return div;
+  }
+
+  function updateStats(count) {
+    if (count === allStudents.length) {
+      statsBar.textContent = '共 ' + allStudents.length + ' 位同学';
+    } else {
+      statsBar.textContent = '找到 ' + count + ' 位同学（共 ' + allStudents.length + ' 人）';
+    }
+  }
+
+  // ============================================================
+  //  Book: Search
+  // ============================================================
+  function doSearch(query) {
+    var q = query.trim().toLowerCase();
+    filteredStudents = q === '' ? allStudents.slice() : allStudents.filter(function(s) {
+      return s.name.toLowerCase().indexOf(q) !== -1 || s.id.indexOf(q) !== -1;
+    });
+    renderCards(filteredStudents);
+    if (q.length > 0) { searchClear.classList.add('visible'); }
+    else { searchClear.classList.remove('visible'); }
+  }
+
+  searchInput.addEventListener('input', function() { doSearch(this.value); });
+  searchClear.addEventListener('click', function() {
+    searchInput.value = '';
+    doSearch('');
+    searchInput.focus();
+  });
+
+  // ============================================================
+  //  Modal
+  // ============================================================
+  function openModal(student) {
+    if (student.photo) {
+      modalPhoto.innerHTML = '<img class="modal-photo" src="' + student.photo + '" alt="' + student.name + '" onerror="this.parentElement.innerHTML=\'<div class=modal-placeholder>' + student.name.charAt(0) + '</div>\'">';
+    } else {
+      modalPhoto.innerHTML = '<div class="modal-placeholder">' + student.name.charAt(0) + '</div>';
+    }
+    modalName.textContent = student.name;
+    modalId.textContent = student.id;
+    var majorEl = document.getElementById('modalMajor');
+    if (majorEl) {
+      majorEl.textContent = student.major || '';
+    }
+    if (student.message) {
+      modalMessage.textContent = student.message;
+      modalMessage.className = 'modal-message';
+    } else {
+      modalMessage.textContent = '寄语收集中…';
+      modalMessage.className = 'modal-message modal-message-empty';
+    }
+    modalOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  modalClose.addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function(e) {
+    if (e.target === modalOverlay) closeModal();
+  });
+  modalCard.addEventListener('click', function(e) { e.stopPropagation(); });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
+  });
+
+  // ============================================================
+  //  Page Navigation
+  // ============================================================
+  function goToBook() {
+    document.body.classList.add('in-book');
+    document.body.style.overflow = '';
+    window.scrollTo(0, 0);
+    window.location.hash = '#book';
+  }
+
+  function goToCover() {
+    document.body.classList.remove('in-book');
+    document.body.style.overflow = '';
+    window.scrollTo(0, 0);
+    window.location.hash = '#cover';
+  }
+
+  btnEnter.addEventListener('click', goToBook);
+  btnBack.addEventListener('click', goToCover);
+
+  // Handle browser back button via hash
+  window.addEventListener('hashchange', function() {
+    if (window.location.hash === '#book') {
+      document.body.classList.add('in-book');
+    } else {
+      document.body.classList.remove('in-book');
+    }
+  });
+
+  // ============================================================
+  //  Init
+  // ============================================================
+  function init() {
+    renderCoverPhotos();
+
+    if (allStudents.length === 0) {
+      cardGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#bbb;">暂无数据，请先运行 extract_data.py 生成 data.js</div>';
+    } else {
+      renderCards(allStudents);
+    }
+
+    // Check initial hash
+    if (window.location.hash === '#book') {
+      goToBook();
+    }
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+const GROUP_PHOTOS = ["group_photos/微信图片_20260520155409_418_137.jpg", "group_photos/微信图片_20260608185420_1417_3.jpg", "group_photos/微信图片_20260608185445_1418_3.jpg", "group_photos/微信图片_20260608185631_1419_3.jpg"];
