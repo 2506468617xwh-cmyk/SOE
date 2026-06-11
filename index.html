@@ -286,9 +286,9 @@ body.in-timeline .timeline-page { display: block; }
   height: 0;
   background: var(--red);
   border-radius: 1px;
-  opacity: 0.55;
+  opacity: 0;
   transform: translateX(-50%);
-  transition: height 1.2s cubic-bezier(.22,.61,.36,1);
+  transition: height 1.2s cubic-bezier(.22,.61,.36,1), opacity .3s ease;
   z-index: 0;
 }
 
@@ -1465,9 +1465,11 @@ body.in-timeline .timeline-page { display: block; }
   function renderTimeline() {
     timelineList.innerHTML = '';
     timelineLine.style.height = '0';  // reset line
+    // Hide line initially, show after first node
+    timelineLine.style.opacity = '0';
 
-    // Node interval: 700ms for smooth, unhurried growth
-    var nodeDelay = 700;
+    // Node interval: ~1.2s per node, 7 nodes ≈ 8.4s total
+    var nodeDelay = 1200;
 
     TIMELINE_DATA.forEach(function(item, i) {
       var isLast = (i === TIMELINE_DATA.length - 1);
@@ -1519,22 +1521,26 @@ body.in-timeline .timeline-page { display: block; }
       node.appendChild(card);
       timelineList.appendChild(node);
 
-      // Staggered reveal: node fades in + line grows to this node's dot
+      // Staggered reveal: node fades in, then line grows to it
       (function(n, idx) {
+        var lineGrowDelay = 250; // ms after node appears before line grows
+
         setTimeout(function() {
           n.classList.add('visible');
 
-          // Grow the vertical line to reach this node's dot
-          if (timelineLine && n.querySelector('.timeline-dot')) {
-            var container = timelineLine.parentElement;
-            var containerTop = container.getBoundingClientRect().top;
-            var lineTop = timelineLine.getBoundingClientRect().top;
-            var dotEl = n.querySelector('.timeline-dot');
-            var dotRect = dotEl.getBoundingClientRect();
-            // target height: from line origin to dot center
-            var targetH = dotRect.top + dotRect.height / 2 - lineTop + container.scrollTop;
-            timelineLine.style.height = targetH + 'px';
-          }
+          // Grow line after a short pause (line trails behind node)
+          setTimeout(function() {
+            if (timelineLine && n.querySelector('.timeline-dot')) {
+              timelineLine.style.opacity = '1';
+              var container = timelineLine.parentElement;
+              var lineTop = timelineLine.getBoundingClientRect().top;
+              var dotEl = n.querySelector('.timeline-dot');
+              var dotRect = dotEl.getBoundingClientRect();
+              // Stop line at dot's top edge (dot sits on top of the line)
+              var targetH = dotRect.top - lineTop + container.scrollTop;
+              timelineLine.style.height = targetH + 'px';
+            }
+          }, lineGrowDelay);
         }, idx * nodeDelay + 150);
       })(node, i);
     });
