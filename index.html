@@ -94,42 +94,83 @@ body {
   color: var(--muted);
 }
 
-/* --- group photo marquee --- */
+/* --- cover photo wall: two rows, opposite scroll --- */
 .cover-photos {
-  overflow: hidden;
   width: 100%;
-  height: 45vh;
+  height: 42vh;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #eaeaea;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
   position: relative;
 }
 
-.cover-photos-track {
+.cover-photos.dragging {
+  cursor: grabbing;
+}
+
+.photo-strip {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.photo-strip-track {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   height: 100%;
-  animation: marquee linear infinite;
-  animation-duration: 30s; /* overridden by JS if > 4 photos */
+  will-change: transform;
 }
 
-.cover-photos-track.paused {
-  animation-play-state: paused;
+.photo-strip-track.animating {
+  animation: photoScroll linear infinite;
 }
 
-@keyframes marquee {
+@keyframes photoScroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
-.cover-photo-item {
+/* Top row flows right-to-left (photos move left) */
+.photo-strip.top .photo-strip-track.animating {
+  animation-name: photoScroll;
+}
+
+/* Bottom row flows left-to-right (photos move right) */
+@keyframes photoScrollReverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.photo-strip.bottom .photo-strip-track.animating {
+  animation-name: photoScrollReverse;
+}
+
+.photo-strip-track.dragging {
+  animation: none !important;
+  transition: none !important;
+}
+
+.photo-strip-track.snap-back {
+  transition: transform .5s cubic-bezier(.25,.8,.25,1.2);
+}
+
+.photo-item {
   flex-shrink: 0;
   height: 100%;
   overflow: hidden;
-  background: #e8e8e8;
+  background: #ddd;
 }
 
-.cover-photo-item img {
+.photo-item img {
   height: 100%;
   width: auto;
   display: block;
+  pointer-events: none;
 }
 
 /* --- cover info section --- */
@@ -691,7 +732,12 @@ body.in-book .book-page {
 
   <!-- group photo collage: 2x2 grid -->
   <div class="cover-photos" id="coverPhotos">
-    <div class="cover-photos-track" id="coverTrack"></div>
+    <div class="photo-strip top" id="stripTop">
+      <div class="photo-strip-track" id="trackTop"></div>
+    </div>
+    <div class="photo-strip bottom" id="stripBottom">
+      <div class="photo-strip-track" id="trackBottom"></div>
+    </div>
   </div>
 
   <!-- info section -->
@@ -794,9 +840,13 @@ body.in-book .book-page {
   var groupPhotos = (typeof GROUP_PHOTOS !== 'undefined') ? GROUP_PHOTOS : [];
 
   // ---- DOM: Cover ----
-  var coverPage   = document.getElementById('coverPage');
-  var coverTrack  = document.getElementById('coverTrack');
-  var btnEnter    = document.getElementById('btnEnter');
+  var coverPage    = document.getElementById('coverPage');
+  var coverPhotos  = document.getElementById('coverPhotos');
+  var trackTop     = document.getElementById('trackTop');
+  var trackBottom  = document.getElementById('trackBottom');
+  var stripTop     = document.getElementById('stripTop');
+  var stripBottom  = document.getElementById('stripBottom');
+  var btnEnter     = document.getElementById('btnEnter');
 
   // ---- DOM: Book ----
   var bookPage    = document.getElementById('bookPage');
@@ -817,51 +867,149 @@ body.in-book .book-page {
   var modalMessage = document.getElementById('modalMessage');
 
   // ============================================================
-  //  Cover: Render marquee group photos
+  //  Cover: Two-row photo wall with drag & auto scroll
   // ============================================================
   function renderCoverPhotos() {
-    coverTrack.innerHTML = '';
     if (groupPhotos.length === 0) return;
 
-    // Build photo items (original set)
-    function createItems() {
+    // Split photos: odd indices → top row, even → bottom row
+    var photosTop = [];
+    var photosBottom = [];
+    groupPhotos.forEach(function(src, i) {
+      if (i % 2 === 0) photosTop.push(src);
+      else photosBottom.push(src);
+    });
+
+    function buildTrack(trackEl, photos) {
+      trackEl.innerHTML = '';
       var frag = document.createDocumentFragment();
-      groupPhotos.forEach(function(src, i) {
-        var div = document.createElement('div');
-        div.className = 'cover-photo-item';
-        var img = document.createElement('img');
-        img.src = src;
-        img.alt = '班级合照 ' + (i + 1);
-        img.loading = 'lazy';
-        img.draggable = false;
-        img.onerror = function() { this.style.display = 'none'; };
-        div.appendChild(img);
-        frag.appendChild(div);
-      });
-      return frag;
+      // Build one full set
+      function appendSet() {
+        photos.forEach(function(src) {
+          var div = document.createElement('div');
+          div.className = 'photo-item';
+          var img = document.createElement('img');
+          img.src = src;
+          img.alt = '';
+          img.loading = 'lazy';
+          img.draggable = false;
+          img.onerror = function() { div.style.display = 'none'; };
+          div.appendChild(img);
+          frag.appendChild(div);
+        });
+      }
+      appendSet(); // original
+      appendSet(); // duplicate for seamless loop
+      trackEl.appendChild(frag);
     }
 
-    // Append twice for seamless infinite loop
-    coverTrack.appendChild(createItems());
-    coverTrack.appendChild(createItems());
+    buildTrack(trackTop, photosTop);
+    buildTrack(trackBottom, photosBottom);
 
-    // Dynamic speed: ~6s per photo, min 30s
-    var duration = Math.max(30, groupPhotos.length * 6);
-    coverTrack.style.animationDuration = duration + 's';
+    // Dynamic speed: ~4s per photo, min 20s
+    var topDuration  = Math.max(20, photosTop.length * 4);
+    var botDuration  = Math.max(20, photosBottom.length * 4);
+    trackTop.style.animationDuration = topDuration + 's';
+    trackBottom.style.animationDuration = botDuration + 's';
 
-    // Pause on hover / touch
-    coverTrack.parentElement.addEventListener('mouseenter', function() {
-      coverTrack.classList.add('paused');
-    });
-    coverTrack.parentElement.addEventListener('mouseleave', function() {
-      coverTrack.classList.remove('paused');
-    });
-    coverTrack.parentElement.addEventListener('touchstart', function() {
-      coverTrack.classList.add('paused');
-    }, { passive: true });
-    coverTrack.parentElement.addEventListener('touchend', function() {
-      coverTrack.classList.remove('paused');
-    });
+    // Start animation
+    trackTop.classList.add('animating');
+    trackBottom.classList.add('animating');
+
+    // ============================================================
+    //  Drag-to-scroll for both rows simultaneously
+    // ============================================================
+    function setupDrag(container, tracks) {
+      var dragging = false;
+      var startX = 0;
+      var startTransforms = [];
+      var velocities = [];
+      var lastX = 0;
+      var lastTime = 0;
+
+      function getComputedTranslateX(el) {
+        var m = window.getComputedStyle(el).transform;
+        if (m === 'none') return 0;
+        var matrix = m.split(',');
+        return parseFloat(matrix[4]) || 0;
+      }
+
+      function onStart(e) {
+        dragging = true;
+        var px = e.touches ? e.touches[0].clientX : e.clientX;
+        startX = px;
+        lastX = px;
+        lastTime = Date.now();
+        velocities = [];
+        startTransforms = tracks.map(function(t) { return getComputedTranslateX(t); });
+        tracks.forEach(function(t) {
+          t.classList.add('dragging');
+          t.classList.remove('snap-back');
+        });
+        container.classList.add('dragging');
+        e.preventDefault();
+      }
+
+      function onMove(e) {
+        if (!dragging) return;
+        var px = e.touches ? e.touches[0].clientX : e.clientX;
+        var dx = px - startX;
+        var now = Date.now();
+        var dt = now - lastTime;
+        if (dt > 0) {
+          var vx = (px - lastX) / dt;
+          velocities.push(vx);
+          if (velocities.length > 5) velocities.shift();
+        }
+        lastX = px;
+        lastTime = now;
+
+        tracks.forEach(function(t, i) {
+          t.style.transform = 'translateX(' + (startTransforms[i] + dx) + 'px)';
+        });
+      }
+
+      function onEnd() {
+        if (!dragging) return;
+        dragging = false;
+        container.classList.remove('dragging');
+
+        // Average velocity → inertia distance
+        var avgV = 0;
+        velocities.forEach(function(v) { avgV += v; });
+        avgV = velocities.length > 0 ? avgV / velocities.length : 0;
+        var inertiaDx = avgV * 180;
+
+        tracks.forEach(function(t) {
+          var currentX = getComputedTranslateX(t);
+          var targetX = currentX + inertiaDx;
+
+          t.classList.remove('dragging');
+          t.classList.add('snap-back');
+          t.style.transform = 'translateX(' + targetX + 'px)';
+
+          t.addEventListener('transitionend', function handler() {
+            t.removeEventListener('transitionend', handler);
+            t.classList.remove('snap-back');
+            t.style.transform = '';
+            // Restart animation cleanly
+            t.style.animation = 'none';
+            void t.offsetHeight;
+            t.style.animation = '';
+            t.classList.add('animating');
+          });
+        });
+      }
+
+      container.addEventListener('mousedown', onStart);
+      container.addEventListener('touchstart', onStart, { passive: false });
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('mouseup', onEnd);
+      window.addEventListener('touchend', onEnd);
+    }
+
+    setupDrag(coverPhotos, [trackTop, trackBottom]);
   }
 
   // ============================================================
