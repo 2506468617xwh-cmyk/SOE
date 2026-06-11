@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>经济学院 2022届毕业纪念</title>
+<title>经济学院 2026届毕业纪念</title>
 <style>
 /* ============================================================
    Reset & Base
@@ -107,7 +107,7 @@ body {
   gap: 4px;
   height: 100%;
   animation: marquee linear infinite;
-  animation-duration: 30s;
+  animation-duration: 30s; /* overridden by JS if > 4 photos */
 }
 
 .cover-photos-track.paused {
@@ -697,8 +697,8 @@ body.in-book .book-page {
   <!-- info section -->
   <div class="cover-ribbon"></div>
   <div class="cover-info">
-    <div class="cover-dept">国际经济与贸易 · 财政学</div>
-    <div class="cover-title">2022届 毕业纪念册</div>
+    <div class="cover-dept">国际经济与贸易 · 财政学 双学位本科生班</div>
+    <div class="cover-title">2026届 毕业纪念册</div>
     <div class="cover-desc">博学而笃志 · 切问而近思</div>
   </div>
 
@@ -720,14 +720,14 @@ body.in-book .book-page {
   <div class="book-top-bar">
     <button class="btn-back" id="btnBack">← 返回封面</button>
     <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
-    <div class="book-top-title">经济学院 2022届毕业纪念</div>
+    <div class="book-top-title">经济学院 2026届毕业纪念</div>
   </div>
 
   <!-- hero banner (compact, without logo to save space) -->
   <div class="hero">
     <img class="hero-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
     <div class="hero-text">
-      <div class="hero-title">经济学院 2022届毕业纪念</div>
+      <div class="hero-title">经济学院 2026届毕业纪念</div>
       <div class="hero-subtitle">国际经济与贸易 · 财政学 双学位</div>
     </div>
   </div>
@@ -755,7 +755,7 @@ body.in-book .book-page {
 
   <!-- footer -->
   <div class="footer">
-    复旦大学经济学院 <span class="footer-heart">♥</span> 2022届
+    复旦大学经济学院 <span class="footer-heart">♥</span> 2026届
   </div>
 
 </div>
@@ -844,6 +844,10 @@ body.in-book .book-page {
     // Append twice for seamless infinite loop
     coverTrack.appendChild(createItems());
     coverTrack.appendChild(createItems());
+
+    // Dynamic speed: ~6s per photo, min 30s
+    var duration = Math.max(30, groupPhotos.length * 6);
+    coverTrack.style.animationDuration = duration + 's';
 
     // Pause on hover / touch
     coverTrack.parentElement.addEventListener('mouseenter', function() {
