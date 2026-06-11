@@ -176,6 +176,33 @@ body {
   background: var(--white);
 }
 
+.btn-timeline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 48px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--white);
+  border: 2px solid var(--red);
+  border-radius: 50px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  transition: background .2s, color .2s;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-timeline:hover {
+  background: rgba(200,21,27,.06);
+}
+
+.btn-timeline:active {
+  transform: scale(.96);
+}
+
 .btn-enter {
   display: inline-flex;
   align-items: center;
@@ -221,17 +248,223 @@ body {
 }
 
 /* ============================================================
+   PAGE VISIBILITY
+   ============================================================ */
+.book-page    { display: none; }
+.timeline-page { display: none; }
+
+body.in-book     .cover-page  { display: none; }
+body.in-book     .book-page   { display: block; }
+body.in-book     .timeline-page { display: none; }
+
+body.in-timeline .cover-page  { display: none; }
+body.in-timeline .book-page   { display: none; }
+body.in-timeline .timeline-page { display: block; }
+
+/* ============================================================
+   TIMELINE PAGE
+   ============================================================ */
+.timeline-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.timeline-container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 24px 20px;
+  position: relative;
+}
+
+/* Center vertical line */
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #e0e0e0, #C8151B33, #B8860B33, #e0e0e0);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 480px) {
+  .timeline-container::before {
+    left: 28px;
+    transform: none;
+  }
+}
+
+/* --- timeline node --- */
+.timeline-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .5s ease, transform .5s ease;
+  margin-bottom: 48px;
+  position: relative;
+}
+
+.timeline-item.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Dot on the line */
+.timeline-dot {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--red);
+  border: 3px solid var(--white);
+  box-shadow: 0 0 0 2px var(--red);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.timeline-item.golden .timeline-dot {
+  width: 20px;
+  height: 20px;
+  background: #B8860B;
+  box-shadow: 0 0 0 3px #B8860B44, 0 0 12px #B8860B55;
+  border: 4px solid var(--white);
+}
+
+/* --- node content card --- */
+.timeline-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  width: 42%;
+  position: relative;
+}
+
+/* Desktop: alternate left/right */
+@media (min-width: 481px) {
+  .timeline-item:nth-child(odd) .timeline-card {
+    margin-left: 52%;
+  }
+
+  .timeline-item:nth-child(even) .timeline-card {
+    margin-right: 52%;
+    text-align: right;
+  }
+}
+
+/* Mobile: all cards right */
+@media (max-width: 480px) {
+  .timeline-dot {
+    left: 28px;
+  }
+
+  .timeline-card {
+    width: calc(100% - 56px);
+    margin-left: 56px !important;
+  }
+}
+
+.timeline-item.golden .timeline-card {
+  border: 1px solid #B8860B44;
+  background: linear-gradient(135deg, #FFFDF7, #FFF8E7);
+  box-shadow: 0 4px 20px rgba(184,134,11,.12);
+}
+
+.timeline-date {
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 6px;
+  letter-spacing: .3px;
+}
+
+.timeline-item.golden .timeline-date {
+  font-size: .92rem;
+  color: #B8860B;
+}
+
+.timeline-event {
+  font-size: .88rem;
+  line-height: 1.7;
+  color: #555;
+}
+
+.timeline-item.golden .timeline-event {
+  font-weight: 600;
+  color: #5a4a1a;
+}
+
+/* --- timeline photos strip --- */
+.timeline-photos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-top: 10px;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.timeline-photo {
+  flex-shrink: 0;
+  width: 110px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform .2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.timeline-photo:active {
+  transform: scale(.95);
+}
+
+/* Photo zoom modal */
+.photo-zoom-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 300;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.photo-zoom-overlay.active {
+  display: flex;
+}
+
+.photo-zoom-overlay img {
+  max-width: 95vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.5);
+}
+
+.photo-zoom-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 301;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+}
+
+/* ============================================================
    BOOK PAGE (hidden initially)
    ============================================================ */
-.book-page {
-  display: none;
-}
-
-body.in-book .cover-page {
-  display: none;
-}
-
-body.in-book .book-page {
   display: block;
 }
 
@@ -715,13 +948,35 @@ body.in-book .book-page {
     <div class="cover-desc">博学而笃志 · 切问而近思</div>
   </div>
 
-  <!-- enter button -->
+  <!-- buttons -->
   <div class="cover-action">
+    <button class="btn-timeline" id="btnTimeline">📅 贸财大事记</button>
     <button class="btn-enter" id="btnEnter">
       进入纪念册 <span class="btn-enter-arrow">→</span>
     </button>
   </div>
 
+</div>
+
+<!-- ============================================================
+     TIMELINE PAGE
+     ============================================================ -->
+<div class="timeline-page" id="timelinePage">
+  <div class="book-top-bar">
+    <button class="btn-back" id="btnTimelineBack">← 返回封面</button>
+    <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+    <div class="book-top-title">贸财大事记</div>
+  </div>
+
+  <div class="timeline-container">
+    <div id="timelineList"></div>
+  </div>
+
+  <div style="text-align:center; padding: 0 20px 48px;">
+    <button class="btn-enter" id="btnTimelineEnter">
+      进入纪念册 <span class="btn-enter-arrow">→</span>
+    </button>
+  </div>
 </div>
 
 <!-- ============================================================
@@ -789,6 +1044,14 @@ body.in-book .book-page {
 </div>
 
 <!-- ============================================================
+     Photo Zoom Overlay (for timeline photos)
+     ============================================================ -->
+<div class="photo-zoom-overlay" id="photoZoomOverlay">
+  <span class="photo-zoom-close" id="photoZoomClose">✕</span>
+  <img id="photoZoomImg" src="" alt="">
+</div>
+
+<!-- ============================================================
      Data
      ============================================================ -->
 <script src="group_photos.js"></script>
@@ -832,6 +1095,17 @@ body.in-book .book-page {
   var modalName    = document.getElementById('modalName');
   var modalId      = document.getElementById('modalId');
   var modalMessage = document.getElementById('modalMessage');
+
+  // ---- DOM: Timeline ----
+  var btnTimeline     = document.getElementById('btnTimeline');
+  var btnTimelineBack = document.getElementById('btnTimelineBack');
+  var btnTimelineEnter = document.getElementById('btnTimelineEnter');
+  var timelineList    = document.getElementById('timelineList');
+
+  // ---- DOM: Photo zoom ----
+  var photoZoomOverlay  = document.getElementById('photoZoomOverlay');
+  var photoZoomImg      = document.getElementById('photoZoomImg');
+  var photoZoomClose    = document.getElementById('photoZoomClose');
 
   // ============================================================
   //  Cover: Two-row photo wall — independent RAF per row + per-row drag
@@ -1143,9 +1417,112 @@ body.in-book .book-page {
   });
 
   // ============================================================
+  //  Timeline Data
+  // ============================================================
+  var TIMELINE_DATA = [
+    { year: "2023", date: "2023年8月",  photos: ["timeline/202308_1.jpg"],
+      event: "经济学院2022级国际经济与贸易、财政学双学位本科生班正式成立。" },
+    { year: "2023", date: "2023年8-9月", photos: ["timeline/202309_1.jpg"],
+      event: "加入六连，精彩的军训生活。" },
+    { year: "2023", date: "2023年10月", photos: ["timeline/202310_1.jpg"],
+      event: "金山区劳动实践，在吕巷镇和平村体会到了乡村振兴的深刻含义。" },
+    { year: "2024", date: "2024年6月",  photos: ["timeline/202406_1.jpg"],
+      event: "绩点改革班会，大家赶上了好时候，3.3不再是这里的关键词。" },
+    { year: "2024", date: "2024年9月",  photos: ["timeline/202409_1.jpg"],
+      event: "大三第一堂生涯班会，大家对泛金融行业有了更加全面的了解。" },
+    { year: "2024", date: "2024年10月", photos: ["timeline/202410_1.jpg"],
+      event: "获评2023-2024学年复旦大学优秀学生集体，我们是最棒的！" },
+    { year: "2026", date: "2026年6月",  photos: ["timeline/202606_1.jpg"],
+      event: "我们毕业了！一百多人的大家庭，记忆在一次次对话、一段段经历中变得清晰，每一件小事共同组成了本科生涯灿烂的四年。大家毕业快乐！" }
+  ];
+
+  // ============================================================
+  //  Timeline: Render
+  // ============================================================
+  function renderTimeline() {
+    timelineList.innerHTML = '';
+
+    TIMELINE_DATA.forEach(function(item, i) {
+      var isLast = (i === TIMELINE_DATA.length - 1);
+
+      // Build node
+      var node = document.createElement('div');
+      node.className = 'timeline-item' + (isLast ? ' golden' : '');
+
+      // Dot
+      var dot = document.createElement('div');
+      dot.className = 'timeline-dot';
+      node.appendChild(dot);
+
+      // Card
+      var card = document.createElement('div');
+      card.className = 'timeline-card';
+
+      var dateEl = document.createElement('div');
+      dateEl.className = 'timeline-date';
+      dateEl.textContent = item.date;
+
+      var eventEl = document.createElement('div');
+      eventEl.className = 'timeline-event';
+      eventEl.textContent = item.event;
+
+      card.appendChild(dateEl);
+      card.appendChild(eventEl);
+
+      // Photos strip
+      if (item.photos && item.photos.length > 0) {
+        var photosRow = document.createElement('div');
+        photosRow.className = 'timeline-photos';
+        item.photos.forEach(function(src) {
+          var img = document.createElement('img');
+          img.className = 'timeline-photo';
+          img.src = src;
+          img.loading = 'lazy';
+          img.alt = item.date;
+          img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            photoZoomImg.src = src;
+            photoZoomOverlay.classList.add('active');
+          });
+          photosRow.appendChild(img);
+        });
+        card.appendChild(photosRow);
+      }
+
+      node.appendChild(card);
+      timelineList.appendChild(node);
+
+      // Staggered reveal
+      setTimeout(function() {
+        node.classList.add('visible');
+      }, i * 400 + 100);
+    });
+  }
+
+  // ---- Photo zoom ----
+  photoZoomClose.addEventListener('click', function() {
+    photoZoomOverlay.classList.remove('active');
+  });
+  photoZoomOverlay.addEventListener('click', function(e) {
+    if (e.target === photoZoomOverlay || e.target === photoZoomClose) {
+      photoZoomOverlay.classList.remove('active');
+    }
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && photoZoomOverlay.classList.contains('active')) {
+      photoZoomOverlay.classList.remove('active');
+    }
+  });
+
+  // ============================================================
   //  Page Navigation
   // ============================================================
+  function clearClasses() {
+    document.body.classList.remove('in-book', 'in-timeline');
+  }
+
   function goToBook() {
+    clearClasses();
     document.body.classList.add('in-book');
     document.body.style.overflow = '';
     window.scrollTo(0, 0);
@@ -1153,21 +1530,32 @@ body.in-book .book-page {
   }
 
   function goToCover() {
-    document.body.classList.remove('in-book');
+    clearClasses();
     document.body.style.overflow = '';
     window.scrollTo(0, 0);
     window.location.hash = '#cover';
   }
 
+  function goToTimeline() {
+    clearClasses();
+    document.body.classList.add('in-timeline');
+    document.body.style.overflow = '';
+    renderTimeline();
+    window.scrollTo(0, 0);
+    window.location.hash = '#timeline';
+  }
+
   btnEnter.addEventListener('click', goToBook);
   btnBack.addEventListener('click', goToCover);
+  btnTimeline.addEventListener('click', goToTimeline);
+  btnTimelineBack.addEventListener('click', goToCover);
+  btnTimelineEnter.addEventListener('click', goToBook);
 
-  // Handle browser back button via hash
   window.addEventListener('hashchange', function() {
-    if (window.location.hash === '#book') {
-      document.body.classList.add('in-book');
-    } else {
-      document.body.classList.remove('in-book');
+    clearClasses();
+    switch (window.location.hash) {
+      case '#book':     document.body.classList.add('in-book'); break;
+      case '#timeline': document.body.classList.add('in-timeline'); break;
     }
   });
 
@@ -1186,6 +1574,8 @@ body.in-book .book-page {
     // Check initial hash
     if (window.location.hash === '#book') {
       goToBook();
+    } else if (window.location.hash === '#timeline') {
+      goToTimeline();
     }
   }
 
