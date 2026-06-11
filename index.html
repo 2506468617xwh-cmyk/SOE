@@ -94,7 +94,7 @@ body {
   color: var(--muted);
 }
 
-/* --- cover photo wall: two rows, opposite scroll --- */
+/* --- cover photo wall: two rows, opposite scroll, drag-to-swipe --- */
 .cover-photos {
   width: 100%;
   height: 42vh;
@@ -124,39 +124,6 @@ body {
   gap: 3px;
   height: 100%;
   will-change: transform;
-}
-
-.photo-strip-track.animating {
-  animation: photoScroll linear infinite;
-}
-
-@keyframes photoScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* Top row flows right-to-left (photos move left) */
-.photo-strip.top .photo-strip-track.animating {
-  animation-name: photoScroll;
-}
-
-/* Bottom row flows left-to-right (photos move right) */
-@keyframes photoScrollReverse {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
-
-.photo-strip.bottom .photo-strip-track.animating {
-  animation-name: photoScrollReverse;
-}
-
-.photo-strip-track.dragging {
-  animation: none !important;
-  transition: none !important;
-}
-
-.photo-strip-track.snap-back {
-  transition: transform .5s cubic-bezier(.25,.8,.25,1.2);
 }
 
 .photo-item {
@@ -867,149 +834,142 @@ body.in-book .book-page {
   var modalMessage = document.getElementById('modalMessage');
 
   // ============================================================
-  //  Cover: Two-row photo wall with drag & auto scroll
+  //  Cover: Two-row photo wall — RAF-driven scroll + drag/inertia
   // ============================================================
   function renderCoverPhotos() {
     if (groupPhotos.length === 0) return;
 
-    // Split photos: odd indices → top row, even → bottom row
-    var photosTop = [];
-    var photosBottom = [];
+    // Split: even indices → top row, odd → bottom
+    var photosTop = [], photosBottom = [];
     groupPhotos.forEach(function(src, i) {
-      if (i % 2 === 0) photosTop.push(src);
-      else photosBottom.push(src);
+      (i % 2 === 0 ? photosTop : photosBottom).push(src);
     });
 
+    // Build track: append two full sets for seamless wrap
     function buildTrack(trackEl, photos) {
       trackEl.innerHTML = '';
       var frag = document.createDocumentFragment();
-      // Build one full set
-      function appendSet() {
+      function addSet() {
         photos.forEach(function(src) {
           var div = document.createElement('div');
           div.className = 'photo-item';
           var img = document.createElement('img');
-          img.src = src;
-          img.alt = '';
-          img.loading = 'lazy';
-          img.draggable = false;
+          img.src = src; img.alt = ''; img.loading = 'lazy'; img.draggable = false;
           img.onerror = function() { div.style.display = 'none'; };
           div.appendChild(img);
           frag.appendChild(div);
         });
       }
-      appendSet(); // original
-      appendSet(); // duplicate for seamless loop
+      addSet();
+      addSet();
       trackEl.appendChild(frag);
+      return trackEl.getBoundingClientRect().width / 2; // wrap-width
     }
 
-    buildTrack(trackTop, photosTop);
-    buildTrack(trackBottom, photosBottom);
+    var wrapTop = buildTrack(trackTop, photosTop);
+    var wrapBottom = buildTrack(trackBottom, photosBottom);
 
-    // Dynamic speed: ~4s per photo, min 20s
-    var topDuration  = Math.max(20, photosTop.length * 4);
-    var botDuration  = Math.max(20, photosBottom.length * 4);
-    trackTop.style.animationDuration = topDuration + 's';
-    trackBottom.style.animationDuration = botDuration + 's';
+    // -------- scroll engine state --------
+    var topPos = 0, bottomPos = 0;           // current translateX
+    var topBase = 0, bottomBase = 0;          // auto-scroll px/ms (top<0 left, bottom>0 right)
+    var topInertia = 0, bottomInertia = 0;    // extra px/ms from drag, decays
+    var dragging = false;
 
-    // Start animation
-    trackTop.classList.add('animating');
-    trackBottom.classList.add('animating');
+    // Base speed: ~3.5 s per photo, min 20s per cycle
+    (function calcSpeed() {
+      var durTop = Math.max(20, photosTop.length * 3.5) * 1000;
+      var durBot = Math.max(20, photosBottom.length * 3.5) * 1000;
+      topBase = -wrapTop / durTop;
+      bottomBase = wrapBottom / durBot;
+    })();
 
-    // ============================================================
-    //  Drag-to-scroll for both rows simultaneously
-    // ============================================================
-    function setupDrag(container, tracks) {
-      var dragging = false;
-      var startX = 0;
-      var startTransforms = [];
-      var velocities = [];
-      var lastX = 0;
-      var lastTime = 0;
-
-      function getComputedTranslateX(el) {
-        var m = window.getComputedStyle(el).transform;
-        if (m === 'none') return 0;
-        var matrix = m.split(',');
-        return parseFloat(matrix[4]) || 0;
-      }
-
-      function onStart(e) {
-        dragging = true;
-        var px = e.touches ? e.touches[0].clientX : e.clientX;
-        startX = px;
-        lastX = px;
-        lastTime = Date.now();
-        velocities = [];
-        startTransforms = tracks.map(function(t) { return getComputedTranslateX(t); });
-        tracks.forEach(function(t) {
-          t.classList.add('dragging');
-          t.classList.remove('snap-back');
-        });
-        container.classList.add('dragging');
-        e.preventDefault();
-      }
-
-      function onMove(e) {
-        if (!dragging) return;
-        var px = e.touches ? e.touches[0].clientX : e.clientX;
-        var dx = px - startX;
-        var now = Date.now();
-        var dt = now - lastTime;
-        if (dt > 0) {
-          var vx = (px - lastX) / dt;
-          velocities.push(vx);
-          if (velocities.length > 5) velocities.shift();
-        }
-        lastX = px;
-        lastTime = now;
-
-        tracks.forEach(function(t, i) {
-          t.style.transform = 'translateX(' + (startTransforms[i] + dx) + 'px)';
-        });
-      }
-
-      function onEnd() {
-        if (!dragging) return;
-        dragging = false;
-        container.classList.remove('dragging');
-
-        // Average velocity → inertia distance
-        var avgV = 0;
-        velocities.forEach(function(v) { avgV += v; });
-        avgV = velocities.length > 0 ? avgV / velocities.length : 0;
-        var inertiaDx = avgV * 180;
-
-        tracks.forEach(function(t) {
-          var currentX = getComputedTranslateX(t);
-          var targetX = currentX + inertiaDx;
-
-          t.classList.remove('dragging');
-          t.classList.add('snap-back');
-          t.style.transform = 'translateX(' + targetX + 'px)';
-
-          t.addEventListener('transitionend', function handler() {
-            t.removeEventListener('transitionend', handler);
-            t.classList.remove('snap-back');
-            t.style.transform = '';
-            // Restart animation cleanly
-            t.style.animation = 'none';
-            void t.offsetHeight;
-            t.style.animation = '';
-            t.classList.add('animating');
-          });
-        });
-      }
-
-      container.addEventListener('mousedown', onStart);
-      container.addEventListener('touchstart', onStart, { passive: false });
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('touchmove', onMove, { passive: false });
-      window.addEventListener('mouseup', onEnd);
-      window.addEventListener('touchend', onEnd);
+    function wrap(p, w) {
+      if (p <= -w) return p + w;
+      if (p > 0)   return p - w;
+      return p;
     }
 
-    setupDrag(coverPhotos, [trackTop, trackBottom]);
+    // -------- RAF loop --------
+    var lastTS = 0;
+    function raf(ts) {
+      if (!lastTS) lastTS = ts;
+      var dt = ts - lastTS;
+      lastTS = ts;
+
+      if (dt > 0 && dt < 200 && !dragging) {
+        // Decay inertia exponentially (half-life ~200ms at 60fps)
+        var decay = Math.pow(0.95, dt / 16);
+        topInertia *= decay;
+        bottomInertia *= decay;
+
+        topPos += (topBase + topInertia) * dt;
+        bottomPos += (bottomBase + bottomInertia) * dt;
+        topPos = wrap(topPos, wrapTop);
+        bottomPos = wrap(bottomPos, wrapBottom);
+
+        trackTop.style.transform = 'translateX(' + topPos + 'px)';
+        trackBottom.style.transform = 'translateX(' + bottomPos + 'px)';
+      }
+
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    // -------- Drag handling --------
+    var drag = { startX: 0, startTop: 0, startBot: 0, lastX: 0, lastT: 0, vels: [] };
+
+    function onStart(px) {
+      dragging = true;
+      topInertia = 0; bottomInertia = 0;
+      drag.startX = px;
+      drag.startTop = topPos;
+      drag.startBot = bottomPos;
+      drag.lastX = px;
+      drag.lastT = performance.now();
+      drag.vels = [];
+      coverPhotos.classList.add('dragging');
+    }
+
+    function onMove(px) {
+      if (!dragging) return;
+      var dx = px - drag.startX;
+      topPos = wrap(drag.startTop + dx, wrapTop);
+      bottomPos = wrap(drag.startBot + dx, wrapBottom);
+      trackTop.style.transform = 'translateX(' + topPos + 'px)';
+      trackBottom.style.transform = 'translateX(' + bottomPos + 'px)';
+
+      var now = performance.now();
+      var dt = now - drag.lastT;
+      if (dt > 0) {
+        drag.vels.push((px - drag.lastX) / dt);
+        if (drag.vels.length > 8) drag.vels.shift();
+      }
+      drag.lastX = px;
+      drag.lastT = now;
+    }
+
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      coverPhotos.classList.remove('dragging');
+
+      // Average drag velocity → inertia for natural continuation
+      var avgV = 0;
+      if (drag.vels.length) {
+        drag.vels.forEach(function(v) { avgV += v; });
+        avgV /= drag.vels.length;
+      }
+      // Subtract base speed so inertia is the "extra" that decays to 0
+      topInertia = avgV - topBase;
+      bottomInertia = avgV - bottomBase;
+    }
+
+    coverPhotos.addEventListener('mousedown', function(e) { onStart(e.clientX); e.preventDefault(); });
+    coverPhotos.addEventListener('touchstart', function(e) { onStart(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener('mousemove', function(e) { onMove(e.clientX); });
+    window.addEventListener('touchmove', function(e) { if (dragging) { onMove(e.touches[0].clientX); e.preventDefault(); } }, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
   }
 
   // ============================================================
