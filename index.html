@@ -37,7 +37,6 @@ body {
   color: var(--text);
   min-height: 100vh;
   line-height: 1.5;
-  overflow-x: hidden;
 }
 
 /* ============================================================
@@ -250,8 +249,8 @@ body {
 /* ============================================================
    PAGE VISIBILITY
    ============================================================ */
-.book-page    { display: none; }
-.timeline-page { display: none; }
+.book-page    { display: none; overflow-x: hidden; }
+.timeline-page { display: none; overflow-x: hidden; }
 
 body.in-book     .cover-page  { display: none; }
 body.in-book     .book-page   { display: block; }
