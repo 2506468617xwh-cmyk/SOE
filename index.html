@@ -486,7 +486,7 @@ body.in-timeline .timeline-page { display: block; }
 
 /* ---- unified header bar (shared by book & timeline pages) ---- */
 .book-top-bar {
-  background: #C8151B !important;
+  background: var(--white);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -494,26 +494,27 @@ body.in-timeline .timeline-page { display: block; }
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .btn-back {
-  background: rgba(255,255,255,.18);
-  border: 1px solid rgba(255,255,255,.3);
-  color: var(--white);
+  background: transparent;
+  border: 2px solid var(--red);
+  color: var(--red);
   font-size: .82rem;
   padding: 7px 16px;
   border-radius: 20px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background .2s;
+  transition: background .2s, color .2s;
   font-family: inherit;
   font-weight: 600;
   -webkit-tap-highlight-color: transparent;
-  text-shadow: 0 1px 2px rgba(0,0,0,.15);
 }
 
 .btn-back:hover {
-  background: rgba(255,255,255,.3);
+  background: var(--red);
+  color: var(--white);
 }
 
 .book-top-logo {
@@ -533,7 +534,7 @@ body.in-timeline .timeline-page { display: block; }
 .book-top-title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--white);
+  color: var(--red);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -541,7 +542,7 @@ body.in-timeline .timeline-page { display: block; }
 
 .book-top-sub {
   font-size: .7rem;
-  color: rgba(255,255,255,.8);
+  color: var(--red-dk);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
