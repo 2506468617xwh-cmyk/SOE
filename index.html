@@ -1088,7 +1088,7 @@ body.in-timeline .timeline-page { display: block; }
   var photoZoomClose    = document.getElementById('photoZoomClose');
 
   // ============================================================
-  //  Cover: Two-row photo wall — independent RAF per row + per-row drag
+  //  Cover: Two-row photo wall — robust RAF + drag, no jump-back
   // ============================================================
   function renderCoverPhotos() {
     if (groupPhotos.length === 0) return;
@@ -1099,8 +1099,9 @@ body.in-timeline .timeline-page { display: block; }
       (i % 2 === 0 ? photosTop : photosBottom).push(src);
     });
 
-    // Build track: append two full sets for seamless wrap
-    function buildTrack(trackEl, photos) {
+    // Build track DOM (duplicate once for seamless loop).
+    // Photos are NOT lazy — they're above the fold.
+    function buildTrackDOM(trackEl, photos) {
       trackEl.innerHTML = '';
       var frag = document.createDocumentFragment();
       function addSet() {
@@ -1108,7 +1109,7 @@ body.in-timeline .timeline-page { display: block; }
           var div = document.createElement('div');
           div.className = 'photo-item';
           var img = document.createElement('img');
-          img.src = src; img.alt = ''; img.loading = 'lazy'; img.draggable = false;
+          img.src = src; img.alt = ''; img.draggable = false;
           img.onerror = function() { div.style.display = 'none'; };
           div.appendChild(img);
           frag.appendChild(div);
@@ -1117,70 +1118,106 @@ body.in-timeline .timeline-page { display: block; }
       addSet();
       addSet();
       trackEl.appendChild(frag);
-      return trackEl.getBoundingClientRect().width / 2;
     }
 
-    var wrapTop = buildTrack(trackTop, photosTop);
-    var wrapBot = buildTrack(trackBottom, photosBottom);
+    buildTrackDOM(trackTop, photosTop);
+    buildTrackDOM(trackBottom, photosBottom);
 
-    // -------- Per-strip state --------
-    // Each row: { pos, base (px/ms), inertia (px/ms), dragging, drag:{...} }
-    function makeStrip(trackEl, wrapW, baseSpeed, container) {
-      return {
-        track: trackEl,
-        wrap: wrapW,
-        base: baseSpeed,
-        pos: 0,
-        inertia: 0,
-        dragging: false,
-        container: container,
-        drag: { startX: 0, startPos: 0, lastX: 0, lastT: 0, vels: [] }
-      };
+    // — Wait for all images in both tracks to finish loading, then measure —
+    var rafId = 0;
+    var strips = null;
+
+    function getWrap(trackEl) {
+      var w = trackEl.getBoundingClientRect().width;
+      return w > 0 ? w / 2 : 1;
     }
 
-    var durTop = Math.max(20, photosTop.length * 3.5) * 1000;
-    var durBot = Math.max(20, photosBottom.length * 3.5) * 1000;
-
-    var strips = [
-      makeStrip(trackTop,    wrapTop, -wrapTop / durTop,  stripTop),
-      makeStrip(trackBottom, wrapBot,  wrapBot / durBot,  stripBottom)
-    ];
-
-    function wrapVal(p, w) {
-      if (p <= -w) return p + w;
-      if (p > 0)   return p - w;
-      return p;
+    function imgsReady(trackEl) {
+      var imgs = trackEl.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) {
+        if (!imgs[i].complete || imgs[i].naturalWidth === 0) return false;
+      }
+      return true;
     }
 
-    // -------- Shared RAF loop --------
-    var lastTS = 0;
-    function raf(ts) {
-      if (!lastTS) lastTS = ts;
-      var dt = ts - lastTS;
-      lastTS = ts;
+    function startEngine() {
+      if (!imgsReady(trackTop) || !imgsReady(trackBottom)) {
+        // Poll until images are loaded
+        rafId = requestAnimationFrame(startEngine);
+        return;
+      }
 
-      if (dt > 0 && dt < 200) {
-        strips.forEach(function(s) {
-          if (s.dragging) return; // skip this strip while dragging
+      var wrapTop = getWrap(trackTop);
+      var wrapBot = getWrap(trackBottom);
 
-          // Decay inertia
-          var decay = Math.pow(0.95, dt / 16);
-          s.inertia *= decay;
+      if (wrapTop < 10 || wrapBot < 10) {
+        rafId = requestAnimationFrame(startEngine);
+        return;
+      }
 
-          s.pos += (s.base + s.inertia) * dt;
-          s.pos = wrapVal(s.pos, s.wrap);
-          s.track.style.transform = 'translateX(' + s.pos + 'px)';
-        });
+      function makeStrip(trackEl, wrapW, baseSpeed, container) {
+        return {
+          track: trackEl, wrap: wrapW, base: baseSpeed,
+          pos: 0, inertia: 0, dragging: false, container: container,
+          drag: { startX: 0, startPos: 0, lastX: 0, lastT: 0, vels: [] }
+        };
+      }
+
+      var durTop = Math.max(20, photosTop.length * 3.5) * 1000;
+      var durBot = Math.max(20, photosBottom.length * 3.5) * 1000;
+
+      strips = [
+        makeStrip(trackTop,    wrapTop, -wrapTop / durTop,  stripTop),
+        makeStrip(trackBottom, wrapBot,  wrapBot / durBot,  stripBottom)
+      ];
+
+      function wrapVal(p, w) {
+        if (w <= 0) return p;
+        while (p <= -w) p += w;
+        while (p > 0)   p -= w;
+        return p;
+      }
+
+      // RAF loop
+      var lastTS = 0;
+      function raf(ts) {
+        if (!lastTS) lastTS = ts;
+        var dt = ts - lastTS;
+        lastTS = ts;
+
+        if (dt > 0 && dt < 200) {
+          strips.forEach(function(s) {
+            if (s.dragging) return;
+            var decay = Math.pow(0.95, dt / 16);
+            s.inertia *= decay;
+            s.pos += (s.base + s.inertia) * dt;
+            s.pos = wrapVal(s.pos, s.wrap);
+            s.track.style.transform = 'translateX(' + s.pos + 'px)';
+          });
+        }
+        requestAnimationFrame(raf);
       }
       requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
 
-    // -------- Per-row drag --------
+      // Resize: recalc wrap width
+      window.addEventListener('resize', function() {
+        strips[0].wrap = getWrap(trackTop);
+        strips[1].wrap = getWrap(trackBot);
+      });
+    }
+
+    function wrapValDynamic(s) {
+      if (s.wrap <= 0) return;
+      while (s.pos <= -s.wrap) s.pos += s.wrap;
+      while (s.pos > 0) s.pos -= s.wrap;
+    }
+
+    // Drag — each strip independent
     function bindDrag(stripEl, s) {
       function getPx(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
 
       function onStart(e) {
+        if (!strips) return; // not ready yet
         s.dragging = true;
         s.inertia = 0;
         var px = getPx(e);
@@ -1193,29 +1230,26 @@ body.in-timeline .timeline-page { display: block; }
         if (e.cancelable) e.preventDefault();
       }
 
-      function onMove(e) {
+      function onMoveFor(s, px) {
         if (!s.dragging) return;
-        var px = getPx(e);
         var dx = px - s.drag.startX;
-        s.pos = wrapVal(s.drag.startPos + dx, s.wrap);
+        s.pos = s.drag.startPos + dx;
+        wrapValDynamic(s);
         s.track.style.transform = 'translateX(' + s.pos + 'px)';
-
         var now = performance.now();
         var dt = now - s.drag.lastT;
-        if (dt > 0) {
+        if (dt > 0 && dt < 500) {
           s.drag.vels.push((px - s.drag.lastX) / dt);
           if (s.drag.vels.length > 8) s.drag.vels.shift();
         }
         s.drag.lastX = px;
         s.drag.lastT = now;
-        if (e.cancelable) e.preventDefault();
       }
 
-      function onEnd() {
+      function onEndFor(s) {
         if (!s.dragging) return;
         s.dragging = false;
         s.container.classList.remove('dragging');
-
         var avgV = 0;
         if (s.drag.vels.length) {
           s.drag.vels.forEach(function(v) { avgV += v; });
@@ -1228,49 +1262,100 @@ body.in-timeline .timeline-page { display: block; }
       stripEl.addEventListener('touchstart', onStart, { passive: false });
     }
 
-    bindDrag(stripTop, strips[0]);
-    bindDrag(stripBottom, strips[1]);
+    // Bind drag to individual strips (events fire even before engine starts)
+    // We use closures over the strips array — the functions reference by index
+    var strip0Placeholder = { dragging: false, wrap: 1, pos: 0, inertia: 0, base: 0,
+      container: stripTop, track: trackTop,
+      drag: { startX:0, startPos:0, lastX:0, lastT:0, vels:[] } };
+    var strip1Placeholder = { dragging: false, wrap: 1, pos: 0, inertia: 0, base: 0,
+      container: stripBottom, track: trackBottom,
+      drag: { startX:0, startPos:0, lastX:0, lastT:0, vels:[] } };
 
-    // Global move/up — dispatch to correct strip
+    // Aliases that resolve to real strips once engine starts
+    function s0() { return (strips && strips[0]) || strip0Placeholder; }
+    function s1() { return (strips && strips[1]) || strip1Placeholder; }
+
+    function bindDragLate(stripEl, getS) {
+      function getPx(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+
+      stripEl.addEventListener('mousedown', function(e) {
+        var s = getS();
+        s.dragging = true; s.inertia = 0;
+        var px = getPx(e);
+        s.drag.startX = px; s.drag.startPos = s.pos;
+        s.drag.lastX = px; s.drag.lastT = performance.now();
+        s.drag.vels = [];
+        s.container.classList.add('dragging');
+        e.preventDefault();
+      });
+      stripEl.addEventListener('touchstart', function(e) {
+        var s = getS();
+        s.dragging = true; s.inertia = 0;
+        var px = getPx(e);
+        s.drag.startX = px; s.drag.startPos = s.pos;
+        s.drag.lastX = px; s.drag.lastT = performance.now();
+        s.drag.vels = [];
+        s.container.classList.add('dragging');
+      }, { passive: false });
+    }
+
+    bindDragLate(stripTop, s0);
+    bindDragLate(stripBottom, s1);
+
+    // Global move/end — dispatch to whichever strip(s) is dragging
     window.addEventListener('mousemove', function(e) {
-      strips.forEach(function(s) { onMoveFor(s, e.clientX); });
+      [s0(), s1()].forEach(function(s) {
+        if (!s.dragging) return;
+        var dx = e.clientX - s.drag.startX;
+        s.pos = s.drag.startPos + dx;
+        // wrap
+        if (s.wrap > 0) { while (s.pos <= -s.wrap) s.pos += s.wrap; while (s.pos > 0) s.pos -= s.wrap; }
+        s.track.style.transform = 'translateX(' + s.pos + 'px)';
+        var now = performance.now(), dt = now - s.drag.lastT;
+        if (dt > 0 && dt < 500) {
+          s.drag.vels.push((e.clientX - s.drag.lastX) / dt);
+          if (s.drag.vels.length > 8) s.drag.vels.shift();
+        }
+        s.drag.lastX = e.clientX; s.drag.lastT = now;
+      });
     });
     window.addEventListener('touchmove', function(e) {
-      strips.forEach(function(s) { onMoveFor(s, e.touches[0].clientX); });
+      [s0(), s1()].forEach(function(s) {
+        if (!s.dragging) return;
+        var px = e.touches[0].clientX;
+        var dx = px - s.drag.startX;
+        s.pos = s.drag.startPos + dx;
+        if (s.wrap > 0) { while (s.pos <= -s.wrap) s.pos += s.wrap; while (s.pos > 0) s.pos -= s.wrap; }
+        s.track.style.transform = 'translateX(' + s.pos + 'px)';
+        var now = performance.now(), dt = now - s.drag.lastT;
+        if (dt > 0 && dt < 500) {
+          s.drag.vels.push((px - s.drag.lastX) / dt);
+          if (s.drag.vels.length > 8) s.drag.vels.shift();
+        }
+        s.drag.lastX = px; s.drag.lastT = now;
+      });
     }, { passive: false });
     window.addEventListener('mouseup', function() {
-      strips.forEach(function(s) { onEndFor(s); });
+      [s0(), s1()].forEach(function(s) {
+        if (!s.dragging) return;
+        s.dragging = false; s.container.classList.remove('dragging');
+        var avgV = 0;
+        if (s.drag.vels.length) { s.drag.vels.forEach(function(v){avgV+=v;}); avgV/=s.drag.vels.length; }
+        s.inertia = avgV - s.base;
+      });
     });
     window.addEventListener('touchend', function() {
-      strips.forEach(function(s) { onEndFor(s); });
+      [s0(), s1()].forEach(function(s) {
+        if (!s.dragging) return;
+        s.dragging = false; s.container.classList.remove('dragging');
+        var avgV = 0;
+        if (s.drag.vels.length) { s.drag.vels.forEach(function(v){avgV+=v;}); avgV/=s.drag.vels.length; }
+        s.inertia = avgV - s.base;
+      });
     });
 
-    function onMoveFor(s, px) {
-      if (!s.dragging) return;
-      var dx = px - s.drag.startX;
-      s.pos = wrapVal(s.drag.startPos + dx, s.wrap);
-      s.track.style.transform = 'translateX(' + s.pos + 'px)';
-      var now = performance.now();
-      var dt = now - s.drag.lastT;
-      if (dt > 0) {
-        s.drag.vels.push((px - s.drag.lastX) / dt);
-        if (s.drag.vels.length > 8) s.drag.vels.shift();
-      }
-      s.drag.lastX = px;
-      s.drag.lastT = now;
-    }
-
-    function onEndFor(s) {
-      if (!s.dragging) return;
-      s.dragging = false;
-      s.container.classList.remove('dragging');
-      var avgV = 0;
-      if (s.drag.vels.length) {
-        s.drag.vels.forEach(function(v) { avgV += v; });
-        avgV /= s.drag.vels.length;
-      }
-      s.inertia = avgV - s.base;
-    }
+    // Kick off
+    startEngine();
   }
 
   // ============================================================
