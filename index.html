@@ -489,7 +489,7 @@ body.in-timeline .timeline-page { display: block; }
   background: var(--white);
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   padding: 14px 16px;
   position: sticky;
   top: 0;
@@ -498,6 +498,10 @@ body.in-timeline .timeline-page { display: block; }
 }
 
 .btn-back {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: 2px solid var(--red);
   color: var(--red);
@@ -517,18 +521,24 @@ body.in-timeline .timeline-page { display: block; }
   color: var(--white);
 }
 
+.book-top-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .book-top-logo {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-  flex-shrink: 0;
 }
 
 .book-top-text {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2px;
-  min-width: 0;
 }
 
 .book-top-title {
@@ -536,16 +546,12 @@ body.in-timeline .timeline-page { display: block; }
   font-weight: 700;
   color: var(--red);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .book-top-sub {
   font-size: .7rem;
   color: var(--red-dk);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ============================================================
@@ -948,8 +954,10 @@ body.in-timeline .timeline-page { display: block; }
 <div class="timeline-page" id="timelinePage">
   <div class="book-top-bar">
     <button class="btn-back" id="btnTimelineBack">← 返回封面</button>
-    <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
-    <div class="book-top-title">贸财大事记</div>
+    <div class="book-top-center">
+      <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+      <div class="book-top-title">贸财大事记</div>
+    </div>
   </div>
 
   <div class="timeline-container">
@@ -972,10 +980,12 @@ body.in-timeline .timeline-page { display: block; }
   <!-- unified header bar -->
   <div class="book-top-bar">
     <button class="btn-back" id="btnBack">← 返回封面</button>
-    <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
-    <div class="book-top-text">
-      <div class="book-top-title">经济学院 2026届毕业纪念</div>
-      <div class="book-top-sub">国际经济与贸易 · 财政学 双学位</div>
+    <div class="book-top-center">
+      <img class="book-top-logo" src="logo.jpg" alt="院徽" onerror="this.style.display='none'">
+      <div class="book-top-text">
+        <div class="book-top-title">经济学院 2026届毕业纪念</div>
+        <div class="book-top-sub">国际经济与贸易 · 财政学 双学位</div>
+      </div>
     </div>
   </div>
 
