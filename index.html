@@ -1128,7 +1128,8 @@ body.in-timeline .timeline-page { display: block; }
     var strips = null;
 
     function getWrap(trackEl) {
-      var w = trackEl.getBoundingClientRect().width;
+      // scrollWidth = full content width (not clipped by overflow:hidden parent)
+      var w = trackEl.scrollWidth;
       return w > 0 ? w / 2 : 1;
     }
 
